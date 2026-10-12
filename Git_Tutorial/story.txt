@@ -1,2 +1,3 @@
 This is a test file for setting up my coding repository.
 Adding a slight change.
+Now, I am syncing changes made on GitHub to my local cloned repository.
