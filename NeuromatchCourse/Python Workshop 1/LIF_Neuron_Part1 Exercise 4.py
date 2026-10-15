@@ -6,6 +6,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 # Defining variables
 t_max = 150e-3 #second
@@ -82,3 +83,74 @@ for step in range(step_end):
     plt.plot(t, v, 'k.')
 
 plt.show()
+
+# Section 4: Random synaptic input
+# Exercise 7: Adding randomness
+
+# Set random number generator seed
+np.random.seed(2020)
+
+# Initialize step_end
+step_end = int(t_max/dt)
+v = el
+
+# Initialize plot
+plt.figure()
+plt.title("Exercise 7: Random Synaptic Input")
+plt.xlabel("Time (s)")
+plt.ylabel("Membrane Potential (V)")
+
+# Loop for step_end steps
+for step in range(step_end):
+    # compute value of t
+    t = step * dt
+
+    # random numbers
+    random_number = 2 * np.random.random() - 1
+    # compute value of i at this time step
+    i = i_mean * (1 + 0.1*(t_max/dt)**(0.5) * random_number)
+
+    # compute v
+    v = v + (dt / tau) * (el - v + r * i)
+
+    plt.plot(t, v, 'k.')
+
+plt.show()
+
+# Exercise 8: Storing stimulations in a list
+
+# Set random number generator seed
+np.random.seed(2020)
+
+# Initialize step_end
+step_end = int(t_max/dt)
+n = 50
+v_n = el * np.ones(n)
+
+# Initialize plot
+plt.figure()
+plt.title("Exercise 8: Storing Stimulations in a list")
+plt.xlabel("Time (s)")
+plt.ylabel("Membrane Potential (V)")
+
+# loop for step_end steps
+for step in range(step_end):
+    # compute value of t
+    t = step * dt
+
+    # Loop 50 times to get 50 cv
+    for j in range(0,n):
+         # random numbers
+         random_number = 2 * np.random.random() - 1
+         
+         # compute value of i at this time step
+         i = i_mean * (1 + 0.1*(t_max/dt)**(0.5) * random_number)
+         
+         # compute v
+         v_n[j] = v_n[j] + (dt / tau) * (el - v_n[j] + r * i)
+
+    plt.plot([t]*n, v_n, 'k.', alpha=0.1)
+
+plt.show()
+
+
