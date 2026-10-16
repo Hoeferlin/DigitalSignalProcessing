@@ -195,7 +195,7 @@ plt.show()
 # Exercise 10: plotting sample standard deviation
 
 # Set random number generator seed
-np.random.seed(2020)
+rng = np.random.default_rng(2020)
 
 # Initialize step_end
 step_end = int(t_max/dt)
@@ -216,7 +216,7 @@ for step in range(step_end):
     # Loop 50 times to get 50 cv
     for j in range(0,n):
          # random numbers
-         random_number = 2 * np.random.random() - 1
+         random_number = 2 * rng.random() - 1
          
          # compute value of i at this time step
          i = i_mean * (1 + 0.1*(t_max/dt)**(0.5) * random_number)
@@ -245,5 +245,36 @@ for step in range(step_end):
     # Plotting mean - standard deviation of V
     plt.plot(t, V_mean - v_std, 'C7.', alpha=0.8)
 
+
+plt.show()
+
+# Section 6: Using NumPy
+
+# Exercise 11: Rewriting with NumPy
+# Rewrite Exercise 7 using NumPy to simplify
+
+
+# Set random number generator seed
+rng = np.random.default_rng(2020)
+
+# Initialize step_end
+step_end = int(t_max/dt) - 1
+t_range = np.linspace(0, t_max, num=step_end, endpoint=False)
+v = el * np.ones(step_end)
+
+# Simulate I over time
+i = i_mean * (1 + 0.1*(t_max/dt)**(0.5) * (2 * rng.random(size=step_end) - 1))
+
+for step in range(1, step_end):
+    v[step] = v[step-1] + (dt / tau) * (el - v[step-1] + r * i[step-1])
+
+
+# Initialize plot
+plt.figure()
+plt.title("Exercise 7: Random Synaptic Input")
+plt.xlabel("Time (s)")
+plt.ylabel("Membrane Potential (V)")
+
+plt.plot(t_range, v, 'k.')
 
 plt.show()
