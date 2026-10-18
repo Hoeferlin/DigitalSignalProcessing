@@ -258,7 +258,7 @@ plt.show()
 rng = np.random.default_rng(2020)
 
 # Initialize step_end
-step_end = int(t_max/dt) - 1
+step_end = int(t_max/dt)
 t_range = np.linspace(0, t_max, num=step_end, endpoint=False)
 v = el * np.ones(step_end)
 
@@ -271,10 +271,114 @@ for step in range(1, step_end):
 
 # Initialize plot
 plt.figure()
-plt.title("Exercise 7: Random Synaptic Input")
+plt.title("Exercise 11: Random Synaptic Input")
 plt.xlabel("Time (s)")
 plt.ylabel("Membrane Potential (V)")
 
 plt.plot(t_range, v, 'k.')
 
+plt.show()
+
+# Exercise 12: Using enumerate & indexing
+np.random.seed(2020)
+
+# Initialize step_end, t_range, v
+step_end = int(t_max/dt)
+t_range = np.linspace(0, t_max, num=step_end, endpoint = False)
+v = el * np.ones(step_end)
+
+# Simulate I over time
+i = i_mean * (1 + 0.1*(t_max/dt)**(0.5) * (2 * rng.random(size=step_end) - 1))
+
+# Loop for step_end values of i using enumerate
+for step, i_step in enumerate(i):
+
+    if step == 0:
+        continue
+
+    v[step] =v[step-1] + (dt / tau) * (el - v[step-1] + r * i[step-1])
+
+# Initialize plot
+plt.figure()
+plt.title("Exercise 12: Using enumerate")
+plt.xlabel("Time (s)")
+plt.ylabel("Membrane Potential (V)")
+
+plt.plot(t_range, v, 'k.')
+
+plt.show()
+
+
+# Section 7: Aggregation
+# Exercise 13: Using 2D Arrays
+
+# Set random number generator seed
+rng = np.random.default_rng(2020)
+
+# Initialize step_end
+step_end = int(t_max/dt)
+t_range = np.linspace(0, t_max, num=step_end, endpoint=False)
+v = el * np.ones(step_end)
+
+# Exercise 13: Using 2D Arrays
+# Set random number generator seed
+rng = np.random.default_rng(2020)
+
+# Initialize step_end
+step_end = int(t_max/dt)
+n = 50
+t_range = np.linspace(0, t_max, num=step_end)
+v_n = el * np.ones([n, step_end])
+i = i_mean * (1 + 0.1*(t_max/dt)**(0.5) * (2 * rng.random([n, step_end]) - 1))
+
+for step in range(1, step_end):
+    v_n[:, step] = v_n[:, step-1] + (dt / tau) * (el - v_n[:, step-1] + r * i[:, step-1])
+
+# Initialize plot
+plt.figure()
+plt.title("Exercise 13: Multiple Realizations of Vm")
+plt.xlabel("Time (s)")
+plt.ylabel("Membrane Potential (V)")
+
+plt.plot(t_range, v_n.T, 'k', alpha=0.3)
+
+plt.show()
+
+# Exercise 14: Plotting sample mean and standard deviation
+# Set random number generator seed
+rng = np.random.default_rng(2020)
+
+# Initialize step_end
+step_end = int(t_max/dt)
+n = 50
+t_range = np.linspace(0, t_max, num=step_end)
+v = el * np.ones([n, step_end])
+
+i = i_mean * (1 + 0.1*(t_max/dt)**(0.5) * (2 * rng.random([n, step_end]) - 1))
+
+for step in range(1, step_end):
+    v_n[:, step] = v_n[:, step - 1] + (dt / tau) * (el - v_n[:, step-1] + r * i[:, step-1])
+
+
+
+# Calculate v_mean across neurons
+v_mean = np.mean(v_n, axis=0)
+
+# Calculate std dev
+v_std = np.std(v_n, axis=0)
+
+# Plot figure
+plt.figure()
+plt.title('Multiple realizations of $V_m$')
+plt.xlabel('time (s)')
+plt.ylabel('$V_m$ (V)')
+
+plt.plot(t_range, v_n.T, 'k', alpha=0.3)
+
+plt.plot(t_range, v_n[-1], 'k', alpha=0.3, label='V(t)')
+plt.plot(t_range, v_mean, 'C0', alpha=0.8, label='mean')
+plt.plot(t_range, v_mean+v_std, 'C7', alpha=0.8)
+plt.plot(t_range, v_mean-v_std, 'C7', alpha=0.8, label='mean $\pm$ std')
+
+plt.legend()
 plt.show()
