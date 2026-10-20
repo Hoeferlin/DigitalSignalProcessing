@@ -1,7 +1,7 @@
 # Python Workshop 2 - LIF Neuron Part II
 # Week 0 Refresher
 # 10.18.2026
-
+#%% Import and variables
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -16,7 +16,7 @@ vth = -50e-3     # milivolt
 r = 100e6        # ohm
 i_mean = 25e-11  # ampere
 
-
+#%%
 def plot_all(t_range, v, raster=None, spikes=None, spikes_mean=None):
   """
   Plots Time evolution for
@@ -80,7 +80,7 @@ def plot_all(t_range, v, raster=None, spikes=None, spikes_mean=None):
 
  
 
-
+#%%
 # Section 1: Histograms
 # Exercise 1: Plotting a histogram
 
@@ -119,6 +119,7 @@ plt.hist(v_n[:,-1],nbins, label = f't = {t_max} s', histtype = 'stepfilled', lin
 plt.legend()
 plt.show()
 
+#%%
 # Section 2: Dictionaries & introducing spikes
 # Exercise 2: adding spiking to the LIF Neuron
 
@@ -195,6 +196,7 @@ plt.ylabel('rate (Hz)')
 plt.tight_layout()
 plt.show()
 
+#%%
 # Section 3: Boolean indexes
 # Random seed generator
 rng = np.random.default_rng(2020)
@@ -271,4 +273,205 @@ for step, t in enumerate(t_range):
 # Plot multiple realizations of Vm, spikes, and mean spike rate
 plot_all(t_range,v_n, raster)
 
+#%% 
 # Section 4: Refractory Period
+# Exercise 5: investigating refractory periods
+
+# Setting random seed
+rng = np.random.default_rng(2020)
+
+# Initialize time range, bins, realizations, and equations
+t_range =np.arange(0, t_max, dt)
+step_end = len(t_range)
+n = 500
+v_n = el * np.ones([n, step_end])
+i = i_mean * (1 + 0.1 * (t_max/dt)**(0.5) * (2 * rng.random([n, step_end]) - 1))
+
+# Initialize binary numpy array for raster plot
+raster = np.zeros([n,step_end])
+
+# Initialize t_ref and last_spike
+t_ref = 0.01
+last_spike = -t_ref * np.ones([n])
+# Loop over time steps
+for step, t in enumerate(t_range):
+
+   if step==0:
+      continue
+
+   # compute v_n
+   v_n[:,step] = v_n[:, step - 1] + (dt / tau) * (el - v_n[:, step - 1] + r * i[:, step])
+
+   # Initialize boolean numpy array 'spiked' with v_n > v_thr
+   spiked = (v_n[:, step] >= vth)
+
+   # set relevant values of v_n to resting potential using spiked
+   v_n[spiked,step] = vr
+
+   # Set relevant elements in raster to 1 using spiked
+   raster[spiked,step] = 1
+
+   # Initialize boolean numpy array clamped using last_spike, t, and t_ref
+   clamped = (last_spike + t_ref > t)
+
+   # reset clamped neurons to vr
+   v_n[clamped,step] = vr
+
+   # Update numpy array last_spike with time t for spiking neurons
+   last_spike[spiked] = t
+
+# Plot multiple realizations of Vm, spikes, and mean spike rate
+plot_all(t_range,v_n, raster)
+#%%
+# Interactive demo 1: random refractory period
+
+# Setting random seed
+rng = np.random.default_rng(2020)
+
+# Initialize time range, bins, realizations, and equations
+t_range =np.arange(0, t_max, dt)
+step_end = len(t_range)
+n = 500
+v_n = el * np.ones([n, step_end])
+i = i_mean * (1 + 0.1 * (t_max/dt)**(0.5) * (2 * rng.random([n, step_end]) - 1))
+
+# Initialize binary numpy array for raster plot
+raster = np.zeros([n,step_end])
+
+# Initialize t_ref and last_spike
+t_ref = 0.01 + 0.007 * rng.random(n)
+t_ref[t_ref<0] = 0
+last_spike = -t_ref * np.ones([n])
+
+# Loop over time steps
+for step, t in enumerate(t_range):
+
+   if step==0:
+      continue
+
+   # compute v_n
+   v_n[:,step] = v_n[:, step - 1] + (dt / tau) * (el - v_n[:, step - 1] + r * i[:, step])
+
+   # Initialize boolean numpy array 'spiked' with v_n > v_thr
+   spiked = (v_n[:, step] >= vth)
+   v_n[spiked,step] = vr
+   raster[spiked,step] = 1
+
+   # Initialize boolean numpy array clamped using last_spike, t, and t_ref
+   clamped = (last_spike + t_ref > t)
+   v_n[clamped,step] = vr
+   last_spike[spiked] = t
+
+# Plot multiple realizations of Vm, spikes, and mean spike rate
+plot_all(t_range,v_n, raster)
+
+# plot histograms of t_ref
+plt.figure(figsize=(8,4))
+plt.hist(t_ref, bins=32, histtype = 'stepfilled', linewidth=0, color='C1')
+plt.xlabel(r'$t_{ref}$ (s)')
+plt.ylabel('count')
+plt.tight_layout()
+plt.show()
+# %%
+# Section 5: Using Functions
+# Exercise 6: rewriting code with functions
+
+def ode_step(v, i, dt):
+  """
+  Evolves membrane potential by one step of discrete time integration
+
+  Args:
+    v (numpy array of floats)
+      membrane potential at previous time step of shape (neurons)
+
+    i (numpy array of floats)
+      synaptic input at current time step of shape (neurons)
+
+    dt (float)
+      time step increment
+
+  Returns:
+    v (numpy array of floats)
+      membrane potential at current time step of shape (neurons)
+  """
+  v = v + dt/tau * (el - v + r*i)
+
+  return v
+
+
+def spike_clamp(v, delta_spike):
+  """
+  Resets membrane potential of neurons if v>= vth
+  and clamps to vr if interval of time since last spike < t_ref
+
+  Args:
+    v (numpy array of floats)
+      membrane potential of shape (neurons)
+
+    delta_spike (numpy array of floats)
+      interval of time since last spike of shape (neurons)
+
+  Returns:
+    v (numpy array of floats)
+      membrane potential of shape (neurons)
+    spiked (numpy array of floats)
+      boolean array of neurons that spiked  of shape (neurons)
+  """
+  # Boolean array spiked indexes neurons with v>=vth
+  spiked = (v >= vth)
+  v[spiked] = vr
+
+  # Boolean array clamped indexes refractory neurons
+  clamped = (t_ref > delta_spike)
+  v[clamped] = vr
+
+  return v, spiked
+
+# Setting random seed
+rng = np.random.default_rng(2020)
+
+# Initialize time range, bins, realizations, and equations
+t_range =np.arange(0, t_max, dt)
+step_end = len(t_range)
+n = 500
+v_n = el * np.ones([n, step_end])
+i = i_mean * (1 + 0.1 * (t_max/dt)**(0.5) * (2 * rng.random([n, step_end]) - 1))
+
+# Initialize binary numpy array for raster plot
+raster = np.zeros([n,step_end])
+
+# Initialize t_ref and last_spike
+mu = 0.01
+sigma = 0.007
+t_ref = mu + sigma * rng.random(n)
+t_ref[t_ref<0] = 0
+last_spike = -t_ref * np.ones([n]) 
+
+# Loop over time steps
+for step, t in enumerate(t_range):
+
+   if step==0:
+      continue
+
+   # compute v_n
+   v_n[:,step] = ode_step(v_n[:, step - 1], i[:,step], dt)
+
+   # Rest membrane potential and clamp
+   v_n[:,step], spiked = spike_clamp(v_n[:,step],t - last_spike)
+
+   # Update raster and last_spike
+   raster[spiked,step] = 1
+   last_spike[spiked] = t
+
+# Plot multiple realizations of Vm, spikes, and mean spike rate
+plot_all(t_range,v_n, raster)
+
+# plot histograms of t_ref
+plt.figure(figsize=(8,4))
+plt.hist(t_ref, bins=32, histtype = 'stepfilled', linewidth=0, color='C1')
+plt.xlabel(r'$t_{ref}$ (s)')
+plt.ylabel('count')
+plt.tight_layout()
+plt.show()
+# %%
+# Section 6: Using classes
